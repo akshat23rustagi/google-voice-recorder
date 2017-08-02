@@ -1,0 +1,16 @@
+{
+  "name": "google-voice-recognition",
+  "version": "1.0.1",
+  "description": "npm package to google voice recognition ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "google-voice",
+    "speech",
+    "recognition"
+  ],
+  "author": "Akshat Rustagi <akshat23rustagi@yahoo.co.in>",
+  "license": "ISC"
+}
