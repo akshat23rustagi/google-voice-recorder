@@ -71,13 +71,16 @@ var Recorder = function(source, cfg) {
     this.node.connect(this.context.destination);   // if the script node is not connected to an output the "onaudioprocess" event is not triggered in chrome.
 };
 
-Recorder.setupDownload = function(blob, filename, sampleRate){
+Recorder.setupDownload = function(blob, filename, sampleRate, windowObj) {
     var reader = new window.FileReader();
     reader.readAsDataURL(blob);
-    reader.onloadend = function() {
+    reader.onloadend = function () {
         var data = reader.result;
         data = data.split(',');
-        console.log(data[1]);
+        if (!process.ENV.token) {
+            console.error("Google API Access token not defined");
+        }
+        var token = 'Bearer ' + process.ENV.token;
         var body = {
             "config": {
                 "encoding": "LINEAR16",
@@ -88,42 +91,30 @@ Recorder.setupDownload = function(blob, filename, sampleRate){
                 "content": data[1]
             }
         };
-        if (!process.ENV.token) {
-            console.error("Access token not defined");
-        }
-        var token = 'Bearer ' + process.ENV.token;
-        $.ajax({
-            url: 'https://speech.googleapis.com/v1/speech:recognize',
-            type: 'post',
-            data: JSON.stringify(body),
-            headers: {
-                'Content-Type' : 'application/json',   //If your header name has spaces or any other char not appropriate
-                'Authorization' : token,
-            },
-            dataType: 'json',
-            success: function (data) {
-                var result = data;
+        var callGoogleApi = new XMLHttpRequest();
+        var url = process.env.GOOGLE_API_URL || 'https://speech.googleapis.com/v1/speech:recognize';
+        var data = JSON.stringify(body);
+
+        // setting headers
+        callGoogleApi.setRequestHeader('Content-Type', 'application/json');
+        callGoogleApi.setRequestHeader('Authorization', token);
+        callGoogleApi.open('POST', url, true);
+        callGoogleApi.send(data);
+        callGoogleApi.onreadystatechange = function () {
+            if (callGoogleApi.readyState == 4 && callGoogleApi.status == 200) {
+                var result = callGoogleApi.responseText;
                 if (result.results && result.results[0]) {
                     var alternatives = result.results[0].alternatives;
                     if (alternatives && alternatives[0]) {
                         //@TODO put in a check for confidence factor as well
                         alternatives[0].transcript = cleanSearchTerm(alternatives[0].transcript.toLowerCase()).trim();
-                        $(location).attr('href', "http://www.jabong.com/find/" + alternatives[0].transcript.split(" ").join("-") + "?q=" + encodeURI(alternatives[0].transcript));
+                        windowObj.location = "http://www.jabong.com/find/" + alternatives[0].transcript.split(" ").join("-") + "?q=" + encodeURI(alternatives[0].transcript);
                     }
                 }
-            },
-            timeout: 30000,
-            error: function(jqXHR, textStatus, errorThrown) {
-                if(textStatus==="timeout") {
-                    console.error("Call has timed out"); //Handle the timeout
-                } else {
-                    console.error("Another error was returned", textStatus, errorThrown); //Handle other error type
-                }
             }
-        });
-    };
-};
-
+        }
+    }
+}
 // function to clean search term from some keywords
 function cleanSearchTerm(searchedTerm) {
     var dictionary = [
