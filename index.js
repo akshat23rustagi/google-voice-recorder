@@ -16,7 +16,7 @@ function saveAudio() {
 }
 
 function doneEncoding(blob) {
-    audioRecorder.setupDownload(blob, "myRecording" + ((recIndex < 10) ? "0" : "") + recIndex + ".wav", audioContext.sampleRate);
+    audioRecorder.setupDownload(blob, "myRecording" + ((recIndex < 10) ? "0" : "") + recIndex + ".wav", audioContext.sampleRate, window);
     recIndex++;
 }
 
