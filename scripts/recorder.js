@@ -72,7 +72,6 @@ var Recorder = function(source, cfg) {
 };
 
 Recorder.setupDownload = function(blob, filename, sampleRate){
-    var url = (window.URL || window.webkitURL).createObjectURL(blob);
     var reader = new window.FileReader();
     reader.readAsDataURL(blob);
     reader.onloadend = function() {
@@ -103,15 +102,12 @@ Recorder.setupDownload = function(blob, filename, sampleRate){
             },
             dataType: 'json',
             success: function (data) {
-                console.info(data);
                 var result = data;
                 if (result.results && result.results[0]) {
                     var alternatives = result.results[0].alternatives;
                     if (alternatives && alternatives[0]) {
-                        console.log('before',alternatives[0].transcript);
                         //@TODO put in a check for confidence factor as well
                         alternatives[0].transcript = cleanSearchTerm(alternatives[0].transcript.toLowerCase()).trim();
-                        console.log('after',alternatives[0].transcript);
                         $(location).attr('href', "http://www.jabong.com/find/" + alternatives[0].transcript.split(" ").join("-") + "?q=" + encodeURI(alternatives[0].transcript));
                     }
                 }
